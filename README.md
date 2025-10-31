@@ -75,7 +75,7 @@ A solução entrega uma **pipeline completa de dados**, cobrindo todas as camada
 │
 ├── dashboard/ # Dashboard Streamlit
 │ └── dashboard.py
-|__ dcos/ # MANIFESTO_FPRA_TP_ARKSOW
+|__ docs/ # MANIFESTO_FPRA_TP_ARKSOW
 ├── report/ # Relatórios automáticos
 ├── out/ # Dados brutos e transformados
 ├── Dockerfile # Build da aplicação
