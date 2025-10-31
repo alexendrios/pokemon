@@ -1,0 +1,69 @@
+version: "3.9"
+
+services:
+  # ------------------------------
+  # Banco de Dados PostgreSQL
+  # ------------------------------
+  db:
+    image: postgres:16
+    container_name: pokemon_db
+    environment:
+      POSTGRES_USER: pokemon_user
+      POSTGRES_PASSWORD: pokemon_pass
+      POSTGRES_DB: pokemon_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pokemon_user -d pokemon_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pokemon_network
+
+  # ------------------------------
+  # Aplicação Pokémon Analytics
+  # ------------------------------
+  pokemon-analytics:
+    build: .
+    container_name: pokemon_analytics
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .docs:/app/.docs
+      - ./report:/app/report
+      - ./out:/app/out
+      - ./src:/app/src
+      - ./dashboard:/app/dashboard
+    environment:
+      PYTHONUNBUFFERED: 1
+      POSTGRES_USERNAME: pokemon_user
+      POSTGRES_PASSWORD: pokemon_pass
+      POSTGRES_DB: pokemon_db
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      REQUISITOS_SSL: "?sslmode=disable"
+      BASE_URL: "http://ec2-52-67-119-247.sa-east-1.compute.amazonaws.com:8000"
+    ports:
+      - "8501:8501"
+    command: >
+      bash -c "python -m src.run_pipeline &&
+               python -m streamlit run dashboard/dashboard.py --server.port 8501 --server.address 0.0.0.0"
+    networks:
+      - pokemon_network
+
+# ------------------------------
+# Volumes persistentes
+# ------------------------------
+volumes:
+  pgdata:
+
+# ------------------------------
+# Rede dedicada
+# ------------------------------
+networks:
+  pokemon_network:
+    driver: bridge
